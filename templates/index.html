@@ -1,0 +1,131 @@
+{% extends "base.html" %} {% block title %}Home - Movie Watchlist{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h2 class="mb-0">My Movie Watchlist</h2>
+  <a href="{{ url_for('add_movie') }}" class="btn btn-primary">
+    <i class="fas fa-plus-circle me-2"></i>Add New Movie
+  </a>
+</div>
+
+{% if movies %}
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+  {% for movie in movies %}
+  <div class="col">
+    <div class="card h-100 movie-card">
+      <div class="movie-image-container">
+        {% if movie.image %}
+        <img
+          src="{{ url_for('static', filename='uploads/' + movie.image) }}"
+          alt="{{ movie.title }} poster"
+          class="card-img-top movie-poster"
+        />
+        {% else %}
+        <div class="no-image-placeholder">
+          <i class="fas fa-film no-image-icon"></i>
+          <span class="no-image-text">No Poster</span>
+        </div>
+        {% endif %}
+      </div>
+      <div class="card-body d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <h5 class="card-title mb-0">{{ movie.title }}</h5>
+          <button
+            class="btn btn-sm btn-outline-danger delete-btn"
+            onclick="confirmDelete({{ movie.id }}, '{{ movie.title }}')"
+            title="Delete {{ movie.title }}"
+          >
+            <i class="fas fa-trash"></i>
+          </button>
+        </div>
+        <div class="card-text flex-grow-1">
+          {% if movie.director %}
+          <p class="mb-2">
+            <i class="fas fa-user me-2"></i><strong>Director:</strong> {{
+            movie.director }}
+          </p>
+          {% endif %} {% if movie.year %}
+          <p class="mb-2">
+            <i class="fas fa-calendar me-2"></i><strong>Year:</strong> {{
+            movie.year }}
+          </p>
+          {% endif %} {% if movie.genre %}
+          <p class="mb-0">
+            <i class="fas fa-tag me-2"></i><strong>Genre:</strong> {{
+            movie.genre }}
+          </p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+  <div class="empty-state">
+    <div class="empty-icon mb-3"><i class="fas fa-film"></i></div>
+    <h3 class="mb-3">No movies in your watchlist yet!</h3>
+    <p class="text-muted mb-4">
+      Start building your movie collection by adding your first movie.
+    </p>
+    <a href="{{ url_for('add_movie') }}" class="btn btn-primary btn-lg">
+      <i class="fas fa-plus-circle me-2"></i>Add Your First Movie
+    </a>
+  </div>
+</div>
+{% endif %}
+
+<script>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        Swal.fire({
+          title: '{{ "Success!" if category == "success" else "Info" }}',
+          text: '{{ message }}',
+          icon: '{{ "success" if category == "success" else "info" }}',
+          timer: 3000,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          toast: true,
+          position: 'top-end'
+        });
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  function confirmDelete(movieId, movieTitle) {
+    Swal.fire({
+      title: 'Are you sure?',
+      text: `Do you want to delete "${movieTitle}" from your watchlist?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Yes, delete it!',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true,
+      customClass: {
+        popup: 'swal-custom-popup',
+        title: 'swal-custom-title',
+        content: 'swal-custom-content'
+      }
+    }).then((result) => {
+      if (result.isConfirmed) {
+
+        Swal.fire({
+          title: 'Deleting...',
+          text: 'Please wait while we remove the movie.',
+          allowOutsideClick: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+
+
+        window.location.href = `/delete_movie/${movieId}`;
+      }
+    });
+  }
+</script>
+{% endblock %}
